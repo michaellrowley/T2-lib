@@ -105,10 +105,6 @@ namespace T2 {
         };
 
         class server {
-            // TODO: Finish implementing stop_listening functionality.
-            // Maybe even consider having the connection_handlers being
-            // passed as a pointer so that external callers can change
-            // the vector at runtime.
         private:
             bool cleaned_up = false; // Stores whether the server's listen_loop has returned.
             void listen_loop(
