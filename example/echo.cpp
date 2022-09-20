@@ -1,4 +1,4 @@
-// clang++ example/echo.cpp -std=c++20 -Wall source/T2/net/client.cpp source/T2/net/server.cpp source/T2/utility/utility.cpp -I [YOUR_BOOST_PATH] -I source/
+// clang++ echo.cpp -std=c++20 ../source/T2/net/client.cpp ../source/T2/net/server.cpp ../source/T2/utility/utility.cpp -I ../../../ -I ../source/ -Wall
 
 #include <T2/net/net.hpp>
 #include <iostream>
