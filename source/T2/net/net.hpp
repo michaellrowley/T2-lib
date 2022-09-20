@@ -72,7 +72,7 @@ namespace T2 {
             // Unique
             boost::asio::ip::tcp::endpoint source; // Not const because we need to init a socket to get this in one constructor.
 
-            enum {
+            enum connection_states {
                 disconnected,
                 connected
             } connection_state;

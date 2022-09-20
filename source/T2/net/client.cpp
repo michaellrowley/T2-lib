@@ -37,6 +37,7 @@ T2::net::client::client(const boost::asio::ip::tcp::endpoint& dest) :
     connection_state(T2::net::client::disconnected),
     connection_socket(boost::asio::ip::tcp::socket(T2::net::client::asio_context)), destination(dest) {
 
+    this->connection_state = T2::net::client::connection_states::disconnected;
     T2::net::client::initialization();
 }
 
@@ -49,11 +50,15 @@ T2::net::client::client(boost::asio::ip::tcp::socket& base) : connection_state(T
 
     boost::asio::socket_base::keep_alive linger_option(true);
     this->connection_socket.set_option(linger_option);
+    this->connection_state = T2::net::client::connection_states::connected;
 
     T2::net::client::initialization();
 }
 
 void T2::net::client::connect() {
+    if (this->connection_state != T2::net::client::connection_states::disconnected)
+        std::__throw_runtime_error("Connect attempted whilst already connected.");
+
     T2::net::client::asio_request* const request_obj =
         new T2::net::client::asio_request{
         .request_type = T2::net::client::asio_request::asio_request_types::connect,
@@ -75,7 +80,7 @@ void T2::net::client::connect() {
     // by this point, after setting disposal_flag we cannot be sure of any members' validity.
     const T2::net::client::asio_request::request_statuses request_status = request_obj->request_status;
     pending_connections_lock.lock();
-    request_obj->disposal_flag = true;
+    request_obj->disposal_flag = true; // [this]->[asio_loop]: "You can free/delete the object now"
     pending_connections_lock.unlock();
 
     if (request_status == T2::net::client::asio_request::request_statuses::processing) {
@@ -98,13 +103,15 @@ void T2::net::client::connect() {
 
     boost::asio::socket_base::keep_alive linger_option(true);
     this->connection_socket.set_option(linger_option);
+    this->connection_state = T2::net::client::connection_states::connected;
 }
 
 void T2::net::client::disconnect() {
-    // No complex thread-/async based execution here as
-    // this code should be quick.
+    if (this->connection_state != T2::net::client::connection_states::connected)
+        std::__throw_runtime_error("Disconnect attempted whilst already disconnected.");
     this->connection_socket.cancel();
     this->connection_socket.close();
+    this->connection_state = T2::net::client::connection_states::disconnected;
 }
 
 void T2::net::client::send_data(const boost::asio::const_buffer& data) {
@@ -218,7 +225,7 @@ size_t T2::net::client::receive_data_base(boost::asio::ip::tcp::socket& socket,
 
 T2::net::client::~client() {
     if (this->connection_state == connected) {
-        this->disconnect();
+        this->disconnect(); // No need to wrap this in a try/catch, we've just checked connection_state.
     }
     std::unique_lock<std::mutex> count_lock(T2::net::client::active_instance_count.mutex);
     if (--T2::net::client::active_instance_count.object == 0) {
