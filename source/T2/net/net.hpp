@@ -123,7 +123,7 @@ namespace T2 {
                 const bool multiple_calls = true);
             // Wrapper around the start_listening function that takes a vector for a parameter.
             void start_listening(std::function<void(T2::net::client* const)> connection_handler);
-            void stop_listening(bool silent = false);
+            void stop_listening();
         };
     };
 };

@@ -71,8 +71,8 @@ void T2::net::server::start_listening(
     }
 }
 
-void T2::net::server::stop_listening(bool silent) {
-    if (!silent && !this->actively_listening) {
+void T2::net::server::stop_listening() {
+    if (!this->actively_listening) {
         std::__throw_runtime_error("T2::net::server::stop_listening() was called when the "
             "server was not actively listening.");
     }
@@ -80,7 +80,9 @@ void T2::net::server::stop_listening(bool silent) {
 }
 
 T2::net::server::~server() {
-    this->stop_listening(true);
+    if (this->actively_listening) {
+        this->stop_listening();
+    }
     while (!this->cleaned_up) {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
