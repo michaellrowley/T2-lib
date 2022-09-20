@@ -43,4 +43,4 @@ For linux users, ``build-library.sh`` is available to compile the library into a
 The T2-lib headers can be used in your project as long as you link their respective C++ files and add a path to boost in your include search-list.
 
 ## Security
-Whilst the overall security and integrity of this library isn't guaranteed, it *is* guaranteed that the testing tool (``tests/tests.cpp``) is exploitable if allowed to run under arbitrary command line arguments that weren't chosen by you.
+Whilst the overall security and integrity of this library isn't guaranteed, it *is* guaranteed that the testing tool (``tests/tests.cpp``) is exploitable if allowed to run under arbitrary command line arguments.
