@@ -10,21 +10,15 @@
 bool case_wrapper(std::function<bool()> case_ref, const std::string case_identifier) {
     try {
         if (!case_ref()) {
-#if defined(_DEBUG)
             std::cerr << "CASE FAILED: " + case_identifier + ".\r\n";
-#endif
             return false;
         }
     }
     catch (...) {
-#if defined(_DEBUG)
             std::cerr << "CASE FAILED (VIA EXCEPTION): " + case_identifier + ".\r\n";
-#endif
         return false;
     }
-#if defined(_DEBUG)
             std::clog << "CASE PASSED: " + case_identifier + ".\r\n";
-#endif
     return true;
 }
 
@@ -33,7 +27,7 @@ int main(int argc, char** argv) {
     // were declared in (i.e, [0], [1], [2], ..., [n]) as we use async to speed up the
     // calling process.
     // Note #2: We're not actually using the return value of each case right now but it could be
-    // useful in the future and there's little performance overhead in a few instructions messing
+    // useful in the future and there's little performance overhead in a few instructions interacting
     // with EAX.
     static std::pair<std::function<bool()>, std::string> cases[] = {
         {
@@ -100,7 +94,7 @@ int main(int argc, char** argv) {
         //           case_index which opens this program up to an out-of-bounds memory
         //           execution exploit.
         const unsigned int case_index = std::stoi(argv[1]);
-        if (!case_wrapper(cases[case_index].first, std::to_string(case_index) + " - '" +
+        if (!case_wrapper(cases[case_index].first, std::to_string(case_index) + ": '" +
             cases[case_index].second + "'")) {
             return -1;
         }
