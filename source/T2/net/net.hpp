@@ -71,6 +71,7 @@ namespace T2 {
 
             // Unique
             boost::asio::ip::tcp::endpoint source; // Not const because we need to init a socket to get this in one constructor.
+            boost::asio::ip::tcp::socket connection_socket;
 
             enum connection_states {
                 disconnected,
@@ -78,7 +79,6 @@ namespace T2 {
             } connection_state;
 
         public:
-            boost::asio::ip::tcp::socket connection_socket;
             const boost::asio::ip::tcp::endpoint destination;
             // This is pretty annoying but since source isn't 'const' I don't want to leave it public.
             const boost::asio::ip::tcp::endpoint& get_source() const { return this->source; }
