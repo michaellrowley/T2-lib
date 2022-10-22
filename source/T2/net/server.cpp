@@ -66,7 +66,6 @@ void T2::net::server::start_listening(
     this->actively_listening = true;
     std::thread(&T2::net::server::listen_loop, this, connection_handlers).detach();
     if (multiple_calls) {
-        // I can't remember why this parameter exists, TODO: Look into it.
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }

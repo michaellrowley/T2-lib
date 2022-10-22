@@ -64,7 +64,6 @@ void T2::net::client::connect() {
         .request_type = T2::net::client::asio_request::asio_request_types::connect,
         .socket = this->connection_socket,
         .request.connection_details = {
-            // .origin = this,
             .endpoint = this->destination
         }
     };
@@ -127,9 +126,8 @@ void T2::net::client::send_data_base(boost::asio::ip::tcp::socket& socket,
 
     T2::net::client::initialization();
 
-    // Opted for the linear, synchronous approach because it just wouldn't
-    // call the handler and (B) sending data over a socket shouldn't take
-    // long enough to warrant the asynchronous call.
+    // Opted for the linear, synchronous approach because sending data over
+    // a socket shouldn't take long enough to warrant the asynchronous call.
 
     boost::system::error_code error_code;
 

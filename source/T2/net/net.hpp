@@ -49,7 +49,6 @@ namespace T2 {
                 // to parse by hand when variable-length data is at the end.
                 union request_specific {
                     struct connection_request {
-                        // T2::net::client* const origin; - Not required (yet).
                         const boost::asio::ip::tcp::endpoint endpoint;
                     } connection_details;
                     struct receive_request {
