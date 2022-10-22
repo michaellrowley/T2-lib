@@ -36,14 +36,15 @@ The ``T2::net::client`` class works to integrate timeouts in boost's API in addi
 ### Compilation
 The ``_DEBUG`` macro can be specified in order to enable debug outputs via ``std::clog`` and ``std::cerr``.
 
-Example usage of this library is available in the ``example/`` directory, compilation instructions for ``clang++`` can be found at the top of those files, it should be fairly trivial to convert them to MSVC instructions as there are no OS-specific flags/options used.
+Example usage of this library is available in the ``example/`` directory, compilation instructions for ``clang++`` can be found at the top of those files, it should be fairly trivial to convert them to their MSVC counterparts as there are no OS-specific flags/options used.
 
 For linux users, ``build-library.sh`` is available to compile the library into a ``.a`` archive file which can then be linked against.
 
-The T2-lib headers can be used in your project as long as you link their respective C++ files and add a path to boost in your include search-list. A list of the current C++ files can be found below (starting from base directory ``source/``:
+The T2-lib headers can be used in your project as long as you link their respective C++ files and add a path to boost in your include search-list. A list of the current C++ files can be found below (starting from base directory ``source/``):
 ```
 T2/utility/utility.cpp T2/net/client.cpp T2/net/server.cpp
 ```
 
 ## Security
 Whilst the overall security and integrity of this library isn't guaranteed, it *is* guaranteed that the testing tool (``tests/tests.cpp``) is exploitable if allowed to run under arbitrary command line arguments that weren't chosen by you.
+If you identify a possible vulnerability in this code please contact me via ``michaellrowley(@)protonmail.com``.
