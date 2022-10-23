@@ -1,5 +1,5 @@
 # T2-Lib
-This project is an object-oriented wrapper around [boost](https://www.boost.org/)'s networking functionality (mostly stemming from the ``asio`` namespace). It requires that you have access to boost's ``asio``, ``endian``, and ``lexical_cast`` packages/libraries for compilation.
+This project is an object-oriented wrapper around [boost](https://www.boost.org/)'s networking functionality (mostly stemming from the ``asio`` namespace). It requires that you have access to boost's [``asio``](https://github.com/boostorg/asio), [``endian``](https://github.com/boostorg/endian), and [``lexical_cast``](https://github.com/boostorg/lexical_cast) libraries for compilation (they are included via chevron brackets).
 
 ## Documentation
 There are two primary classes that are used to communicate with other devices - a ``T2::net::client`` which initiates a connection to a remote endpoint that is already listening for a new connection, and a ``T2::net::server`` which listens on a given port and calls specific connection handlers when a new connection is established on that port.
