@@ -83,7 +83,8 @@ void T2::net::client::connect() {
     pending_connections_lock.unlock();
 
     if (request_status == T2::net::client::asio_request::request_statuses::processing) {
-        this->disconnect();
+        if (this->connection_state == T2::net::client::connection_states::connected)
+            this->disconnect();
 #if defined(_DEBUG)
         std::clog << "T2::net::client::connect() @ " + std::to_string(__LINE__) +
             ": Timed out after " + std::to_string(connection_timeout.count())
@@ -93,7 +94,8 @@ void T2::net::client::connect() {
     }
     else if (request_status != T2::net::client::asio_request::request_statuses::success/* &&
              request_status != T2::net::client::asio_request::request_statuses::processing*/) {
-        this->disconnect();
+        if (this->connection_state == T2::net::client::connection_states::connected)
+            this->disconnect();
         // An error has been sent to cerr explaining this in more detail.
         std::__throw_runtime_error("Client-based async_connect() received an unexpected "
             "error during connection.");
