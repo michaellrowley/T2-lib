@@ -1,5 +1,5 @@
 # T2-Lib
-This project is an object-oriented wrapper around [boost](https://www.boost.org/)'s networking functionality (mostly stemming from the ``asio`` namespace). It requires that you have access to boost's ``asio``, ``endian``, and ``lexical_cast`` packages/libraries for compilation.
+This project is an object-oriented wrapper around [boost](https://www.boost.org/)'s networking functionality (mostly stemming from the ``asio`` namespace). It requires that you have access to boost's [``asio``](https://github.com/boostorg/asio), [``endian``](https://github.com/boostorg/endian), and [``lexical_cast``](https://github.com/boostorg/lexical_cast) libraries for compilation (they are included via chevron brackets).
 
 ## Documentation
 There are two primary classes that are used to communicate with other devices - a ``T2::net::client`` which initiates a connection to a remote endpoint that is already listening for a new connection, and a ``T2::net::server`` which listens on a given port and calls specific connection handlers when a new connection is established on that port.
@@ -36,11 +36,15 @@ The ``T2::net::client`` class works to integrate timeouts in boost's API in addi
 ### Compilation
 The ``_DEBUG`` macro can be specified in order to enable debug outputs via ``std::clog`` and ``std::cerr``.
 
-Example usage of this library is available in the ``example/`` directory, compilation instructions for ``clang++`` can be found at the top of those files, it should be fairly trivial to convert them to MSVC instructions as there are no OS-specific flags/options used.
+Example usage of this library is available in the ``example/`` directory, compilation instructions for ``clang++`` can be found at the top of those files, it should be fairly trivial to convert them to their MSVC counterparts as there are no OS-specific flags/options used.
 
 For linux users, ``build-library.sh`` is available to compile the library into a ``.a`` archive file which can then be linked against.
 
-The T2-lib headers can be used in your project as long as you link their respective C++ files and add a path to boost in your include search-list.
+The T2-lib headers can be used in your project as long as you link their respective C++ files and add a path to boost in your include search-list. A list of the current C++ files can be found below (starting from base directory ``source/``):
+```
+T2/utility/utility.cpp T2/net/client.cpp T2/net/server.cpp
+```
 
 ## Security
-Whilst the overall security and integrity of this library isn't guaranteed, it *is* guaranteed that the testing tool (``tests/tests.cpp``) is exploitable if allowed to run under arbitrary command line arguments.
+Whilst the overall security and integrity of this library isn't guaranteed, it *is* guaranteed that the testing tool (``tests/tests.cpp``) is exploitable if allowed to run under arbitrary command line arguments that weren't chosen by you.
+If you identify a possible vulnerability in this code please contact me via ``michaellrowley(@)protonmail.com``.
