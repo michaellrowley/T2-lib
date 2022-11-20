@@ -56,8 +56,7 @@ void T2::net::server::start_listening(std::function<void(T2::net::client* const)
 
 void T2::net::server::start_listening(
         std::vector<std::function<void(T2::net::client* const)>>
-            connection_handlers,
-        const bool multiple_calls) {
+            connection_handlers) {
 
     if (this->actively_listening) {
         std::__throw_runtime_error("T2::net::server::start_listening() was called when the "
@@ -65,9 +64,6 @@ void T2::net::server::start_listening(
     }
     this->actively_listening = true;
     std::thread(&T2::net::server::listen_loop, this, connection_handlers).detach();
-    if (multiple_calls) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
 }
 
 void T2::net::server::stop_listening() {

@@ -17,7 +17,7 @@ if ! test -e ./boost/; then
     # https://github.com/boostorg/lexical_cast # Lexicality
 fi
 
-clang++ ./*/*.cpp -c -Wall -std=c++20 -I $boostpath # Create object files (.o)
+clang++ ./*/*.cpp -c -Wall -std=c++20 -I $boostpath -I . # Create object files (.o)
 ar rcs ./T2.a ./*.o # Create the library file
 
 rm ./*.o # Remove the object files

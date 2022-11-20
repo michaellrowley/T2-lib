@@ -1,6 +1,7 @@
 #ifndef T2_NET
 #define T2_NET
 
+#include <map>
 #include <chrono>
 #include <atomic>
 #include <vector>
@@ -84,19 +85,21 @@ namespace T2 {
 
             client(const boost::asio::ip::tcp::endpoint& dest);
             client(boost::asio::ip::tcp::socket& base);
-            void connect();
+            void connect(const std::chrono::milliseconds& connect_timeout = std::chrono::milliseconds(1500));
             void disconnect();
 
             // For use when a socket has been created via ...::client constructor.
             void send_data(const boost::asio::const_buffer& data);
-            [[nodiscard]] size_t receive_data(boost::asio::mutable_buffer& data_buffer);
+            [[nodiscard]] size_t receive_data(boost::asio::mutable_buffer& data_buffer,
+                const std::chrono::milliseconds& timeout = std::chrono::milliseconds(2500));
 
             // For use when a function has been passed a boost.ASIO socket
             static void send_data_base(boost::asio::ip::tcp::socket& socket,
                 const boost::asio::const_buffer& data);
             [[nodiscard]] static size_t receive_data_base(boost::asio::ip::tcp::socket& socket,
-                boost::asio::mutable_buffer& data_buffer);
-            
+                boost::asio::mutable_buffer& data_buffer,
+                const std::chrono::milliseconds& receive_timeout = std::chrono::milliseconds(2500));
+
             // This needs to be public so that external functions can instantiate their
             // sockets with this context and then use the ..._base functions as an I/O wrapper.
             static inline boost::asio::io_context asio_context;
@@ -114,8 +117,7 @@ namespace T2 {
             server(const uint16_t port);
             ~server();
             void start_listening(
-                std::vector<std::function<void(T2::net::client* const)>> connection_handlers,
-                const bool multiple_calls = true);
+                std::vector<std::function<void(T2::net::client* const)>> connection_handlers);
             // Wrapper around the start_listening function that takes a vector for a parameter.
             void start_listening(std::function<void(T2::net::client* const)> connection_handler);
             void stop_listening();

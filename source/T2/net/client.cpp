@@ -8,12 +8,6 @@
 
 #include "./net.hpp"
 
-// TOTWEAK: These variables could be useful in maximizing traffic
-//          quantity, targeting specific peer regions (by timing),
-//          or more predominantly, to improve performance.
-constexpr std::chrono::milliseconds connection_timeout(1500);
-constexpr std::chrono::milliseconds receive_timeout(2300);
-
 void T2::net::client::retire() {
     T2::net::client::retired_flag = T2::net::client::retire_flags::retire_signal;
     // T2::utility::blocking_timer -> maybe in the future, this isn't really a concern.
@@ -36,7 +30,6 @@ void T2::net::client::initialization() {
 T2::net::client::client(const boost::asio::ip::tcp::endpoint& dest) :
     connection_state(T2::net::client::disconnected),
     connection_socket(boost::asio::ip::tcp::socket(T2::net::client::asio_context)), destination(dest) {
-
     this->connection_state = T2::net::client::connection_states::disconnected;
     T2::net::client::initialization();
 }
@@ -55,7 +48,7 @@ T2::net::client::client(boost::asio::ip::tcp::socket& base) : connection_state(T
     T2::net::client::initialization();
 }
 
-void T2::net::client::connect() {
+void T2::net::client::connect(const std::chrono::milliseconds& connect_timeout) {
     if (this->connection_state != T2::net::client::connection_states::disconnected)
         std::__throw_runtime_error("Connect attempted whilst already connected.");
 
@@ -70,10 +63,10 @@ void T2::net::client::connect() {
     std::unique_lock pending_connections_lock(T2::net::client::pending_asio_requests.mutex);
     T2::net::client::pending_asio_requests.object.push_back(request_obj);
     pending_connections_lock.unlock();
-    // We don't need to store the result of this ...::blocking_timer() call as
-    // the request status of our asio request object will reflect a timeout.
-    T2::utility::blocking_timer(connection_timeout,
-        &request_obj->work_finished);
+
+    // Storing the result of this ...::blocking_timer() call isnt' required; the
+    // request status of the asio request object will reflect a timeout if applicable.
+    T2::utility::blocking_timer(connect_timeout, &request_obj->work_finished);
 
     // Make sure that the function has used the object (or at least stored its parameters)
     // by this point, after setting disposal_flag we cannot be sure of any members' validity.
@@ -87,7 +80,7 @@ void T2::net::client::connect() {
             this->disconnect();
 #if defined(_DEBUG)
         std::clog << "T2::net::client::connect() @ " + std::to_string(__LINE__) +
-            ": Timed out after " + std::to_string(connection_timeout.count())
+            ": Timed out after " + std::to_string(connect_timeout.count())
             + "ms. Destination: '" + boost::lexical_cast<std::string>(this->destination) + "'.\r\n";
 #endif
        std::__throw_runtime_error("Client-based async_connect() failed to receive callback/handler call.");
@@ -119,8 +112,9 @@ void T2::net::client::send_data(const boost::asio::const_buffer& data) {
     T2::net::client::send_data_base(this->connection_socket, data);
 }
 
-size_t T2::net::client::receive_data(boost::asio::mutable_buffer& data_buffer) {
-    return T2::net::client::receive_data_base(this->connection_socket, data_buffer);
+size_t T2::net::client::receive_data(boost::asio::mutable_buffer& data_buffer,
+                const std::chrono::milliseconds& timeout) {
+    return T2::net::client::receive_data_base(this->connection_socket, data_buffer, timeout);
 }
 
 void T2::net::client::send_data_base(boost::asio::ip::tcp::socket& socket,
@@ -155,7 +149,8 @@ void T2::net::client::send_data_base(boost::asio::ip::tcp::socket& socket,
     std::clog << "T2::net::client::send_data_base() @ " + std::to_string(__LINE__) + ": "
         "Sent " + std::to_string(bytes_sent) + "/" + std::to_string(data.size()) +
         " bytes to '" + boost::lexical_cast<std::string>(socket.remote_endpoint(error_code)) + "'.\r\n";
-
+#endif
+#if defined(_EXTRA_DEBUG)
     for (size_t i = 0; i < bytes_sent; i++)
         printf("%02X %s", ((uint8_t*)data.data())[i], (((i % 16) == 15) ? "\n" : ""));
     printf("\n\n");
@@ -164,7 +159,7 @@ void T2::net::client::send_data_base(boost::asio::ip::tcp::socket& socket,
 }
 
 size_t T2::net::client::receive_data_base(boost::asio::ip::tcp::socket& socket,
-    boost::asio::mutable_buffer& data_buffer) {
+    boost::asio::mutable_buffer& data_buffer, const std::chrono::milliseconds& receive_timeout) {
 
     T2::net::client::initialization();
 
@@ -214,7 +209,7 @@ size_t T2::net::client::receive_data_base(boost::asio::ip::tcp::socket& socket,
 #endif
         std::__throw_runtime_error("Client-based async_receive() suffered an unexpected error.");
     }
-#if defined(_DEBUG)
+#if defined(_EXTRA_DEBUG)
     for (size_t i = 0; i < bytes_received; i++)
         printf("%02X %s", ((uint8_t*)data_buffer.data())[i], (((i % 16) == 15) ? "\n" : ""));
     printf("\n\n");
@@ -281,14 +276,12 @@ void T2::net::client::asio_loop() {
                             if (error) {
                                 iterative_request->request_status =
                                     T2::net::client::asio_request::request_statuses::failed;
-
 #if defined(_DEBUG)
                                 std::cerr << "T2::net::client::asio_loop() @ " +
                                     std::to_string(__LINE__) + ": "
                                     "'async_connect()' handler was called with an error code of '" +
                                     std::to_string(error.value()) + "'.\r\n";
 #endif
-
                                 iterative_request->work_finished = true;
                                 return;
                             }
@@ -297,7 +290,6 @@ void T2::net::client::asio_loop() {
                                 std::to_string(__LINE__) + ": " "'async_connect()' handler was called "
                                 "successfully for destination " + dest_string + ".\r\n";
 #endif
-
                             iterative_request->request_status =
                                 T2::net::client::asio_request::request_statuses::success;
                             iterative_request->work_finished = true;
@@ -307,35 +299,34 @@ void T2::net::client::asio_loop() {
                     break;
                     case T2::net::client::asio_request::asio_request_types::receive_data: {
                         iterative_request->socket.async_receive(
-                        iterative_request->request.receive_details.buffer,
-                        [&iterative_request](const boost::system::error_code& error,
-                        size_t bytes_transferred) {
+                            iterative_request->request.receive_details.buffer,
+                            [&iterative_request](const boost::system::error_code& error,
+                                size_t bytes_transferred) {
                             
-                            if (error) {
+                                if (error) {
+                                    iterative_request->request_status =
+                                        T2::net::client::asio_request::request_statuses::failed;
+    #if defined(_DEBUG)
+                                    std::cerr << "T2::net::client::asio_loop() @ " +
+                                        std::to_string(__LINE__) + ": " "'async_receive()' handler was "
+                                        "called with an error code of '" + error.message() + "'.\r\n";
+    #endif
+                                    iterative_request->work_finished = true;
+                                    return;
+                                }
+    #if defined(_DEBUG)
+                                std::clog << "T2::net::client::asio_loop() @ " + std::to_string(__LINE__) +
+                                    ": " "'async_receive()' handler was called successfully, " +
+                                    std::to_string(bytes_transferred) + " bytes were received from '" +
+                                    boost::lexical_cast<std::string>(iterative_request->socket.remote_endpoint())
+                                    + "'.\r\n";
+    #endif
+                                iterative_request->request.receive_details.bytes_received = bytes_transferred;
                                 iterative_request->request_status =
-                                    T2::net::client::asio_request::request_statuses::failed;
-
-#if defined(_DEBUG)
-                                std::cerr << "T2::net::client::asio_loop() @ " +
-                                    std::to_string(__LINE__) + ": " "'async_receive()' handler was "
-                                    "called with an error code of '" + error.message() + "'.\r\n";
-#endif
+                                    T2::net::client::asio_request::request_statuses::success;
                                 iterative_request->work_finished = true;
-                                return;
                             }
-                            
-#if defined(_DEBUG)
-                            std::clog << "T2::net::client::asio_loop() @ " + std::to_string(__LINE__) + ": "
-                                "'async_receive()' handler was called successfully, " +
-                                std::to_string(bytes_transferred) + " bytes were received from '" +
-                                boost::lexical_cast<std::string>(iterative_request->socket.remote_endpoint())
-                                + "'.\r\n";
-#endif
-                            iterative_request->request.receive_details.bytes_received = bytes_transferred;
-                            iterative_request->request_status =
-                                T2::net::client::asio_request::request_statuses::success;
-                            iterative_request->work_finished = true;
-                        });
+                        );
                     }
                     break;
                     default:
