@@ -112,7 +112,7 @@ void T2::net::client::send_data(const boost::asio::const_buffer& data) {
     T2::net::client::send_data_base(this->connection_socket, data);
 }
 
-size_t T2::net::client::receive_data(boost::asio::mutable_buffer& data_buffer,
+size_t T2::net::client::receive_data(const boost::asio::mutable_buffer& data_buffer,
                 const std::chrono::milliseconds& timeout) {
     return T2::net::client::receive_data_base(this->connection_socket, data_buffer, timeout);
 }
@@ -159,7 +159,7 @@ void T2::net::client::send_data_base(boost::asio::ip::tcp::socket& socket,
 }
 
 size_t T2::net::client::receive_data_base(boost::asio::ip::tcp::socket& socket,
-    boost::asio::mutable_buffer& data_buffer, const std::chrono::milliseconds& receive_timeout) {
+    const boost::asio::mutable_buffer& data_buffer, const std::chrono::milliseconds& receive_timeout) {
 
     T2::net::client::initialization();
 

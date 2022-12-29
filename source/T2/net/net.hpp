@@ -53,7 +53,7 @@ namespace T2 {
                         const boost::asio::ip::tcp::endpoint endpoint;
                     } connection_details;
                     struct receive_request {
-                        boost::asio::mutable_buffer& buffer;
+                        const boost::asio::mutable_buffer& buffer;
                         size_t bytes_received;
                     } receive_details;
                 } request;
@@ -90,14 +90,14 @@ namespace T2 {
 
             // For use when a socket has been created via ...::client constructor.
             void send_data(const boost::asio::const_buffer& data);
-            [[nodiscard]] size_t receive_data(boost::asio::mutable_buffer& data_buffer,
+            [[nodiscard]] size_t receive_data(const boost::asio::mutable_buffer& data_buffer,
                 const std::chrono::milliseconds& timeout = std::chrono::milliseconds(2500));
 
             // For use when a function has been passed a boost.ASIO socket
             static void send_data_base(boost::asio::ip::tcp::socket& socket,
                 const boost::asio::const_buffer& data);
             [[nodiscard]] static size_t receive_data_base(boost::asio::ip::tcp::socket& socket,
-                boost::asio::mutable_buffer& data_buffer,
+                const boost::asio::mutable_buffer& data_buffer,
                 const std::chrono::milliseconds& receive_timeout = std::chrono::milliseconds(2500));
 
             // This needs to be public so that external functions can instantiate their

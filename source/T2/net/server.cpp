@@ -40,9 +40,19 @@ void T2::net::server::listen_loop(
         for (std::function<void(T2::net::client* const)>&
                 iterative_handler : connection_handlers) {
 
-            // Expecting the iterative_handler to delete accepted_client before returning.
-            iterative_handler(accepted_client);
+            try {
+                iterative_handler(accepted_client);
+            } catch (...) {
+#if defined(_DEBUG)
+            std::clog << "T2::net::server::listen_loop() @ " + std::to_string(__LINE__) + ": "
+                "Iterative handler threw an exception when processing connection from '" +
+                boost::lexical_cast<std::string>(active_socket.remote_endpoint()) + "'.\r\n";
+#endif
+            }
         }
+        // In this capacity, delete will call the destructor for T2::net::client which will,
+        // if appropriate, disconnect safely and then free resources.
+        delete accepted_client;
     }
     this->cleaned_up = true;
 }
