@@ -10,7 +10,8 @@
 T2::net::server::server(const uint16_t port) : port(port) { }
 
 void T2::net::server::listen_loop(
-        std::vector<std::function<void(T2::net::client* const)>> connection_handlers) {
+        const std::vector<std::function<void(T2::net::client* const)>>& connection_handlers,
+        const bool catch_listeners) {
     // Each server instance gets its own io_context, my thinking
     // is that this will any bottlenecks that would occur with
     // a shared instance. Accepted clients use the T2::client
@@ -37,17 +38,20 @@ void T2::net::server::listen_loop(
 
         T2::net::client* const accepted_client = new T2::net::client(active_socket);
 
-        for (std::function<void(T2::net::client* const)>&
+        for (const std::function<void(T2::net::client* const)>&
                 iterative_handler : connection_handlers) {
 
             try {
                 iterative_handler(accepted_client);
-            } catch (...) {
+            } catch (std::runtime_error& exception_object) {
 #if defined(_DEBUG)
             std::clog << "T2::net::server::listen_loop() @ " + std::to_string(__LINE__) + ": "
-                "Iterative handler threw an exception when processing connection from '" +
-                boost::lexical_cast<std::string>(active_socket.remote_endpoint()) + "'.\r\n";
+                "Iterative handler threw an exception when processing connection - " +
+                std::string(exception_object.what()) + ".\r\n";
 #endif
+                if (!catch_listeners) {
+                    std::__throw_runtime_error("Server listener threw an exception.");
+                }
             }
         }
         // In this capacity, delete will call the destructor for T2::net::client which will,
@@ -57,23 +61,25 @@ void T2::net::server::listen_loop(
     this->cleaned_up = true;
 }
 
-void T2::net::server::start_listening(std::function<void(T2::net::client* const)> connection_handler) {
-    std::vector<std::function<void(T2::net::client* const)>> connection_handler_vector = {
-        connection_handler
-    };
-    this->start_listening(connection_handler_vector);
+void T2::net::server::start_listening(const std::function<void(T2::net::client* const)>& connection_handler,
+    const bool catch_listeners) {
+    this->start_listening(
+        std::vector<std::function<void(T2::net::client* const)>>{ connection_handler },
+        catch_listeners
+    );
 }
 
 void T2::net::server::start_listening(
-        std::vector<std::function<void(T2::net::client* const)>>
-            connection_handlers) {
+        const std::vector<std::function<void(T2::net::client* const)>>& connection_handlers,
+        const bool catch_listeners) {
 
     if (this->actively_listening) {
         std::__throw_runtime_error("T2::net::server::start_listening() was called when the "
             "server was already listening.");
     }
+
     this->actively_listening = true;
-    std::thread(&T2::net::server::listen_loop, this, connection_handlers).detach();
+    std::thread(&T2::net::server::listen_loop, this, connection_handlers, catch_listeners).detach();
 }
 
 void T2::net::server::stop_listening() {

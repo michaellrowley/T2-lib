@@ -280,7 +280,7 @@ void T2::net::client::asio_loop() {
                                 std::cerr << "T2::net::client::asio_loop() @ " +
                                     std::to_string(__LINE__) + ": "
                                     "'async_connect()' handler was called with an error code of '" +
-                                    std::to_string(error.value()) + "'.\r\n";
+                                    error.message() + "'.\r\n";
 #endif
                                 iterative_request->work_finished = true;
                                 return;

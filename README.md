@@ -26,8 +26,8 @@ The ``T2::net::client`` class works to integrate timeouts in boost's API in addi
 ### Server
 
 - ``void T2::net::server::server(const uint16_t)``: Constructs a server object by plainly setting the ``const`` private member 'port' to the provided value.
-- ``void T2::net::server::start_listening(std::function<void(T2::net::client* const)>)``: A wrapper to ``T2::net::server::start_listening``.
-- ⚠️ ``void T2::net::server::start_listening(std::vector<std::function<void(T2::net::client* const)>>, const bool)``: Launches a ``T2::net::server::listen_loop`` on a separate thread. An exception will be thrown if the server is already listening.
+- ``void T2::net::server::start_listening(std::function<void(T2::net::client* const)>, const bool catch_listener)``: A wrapper to ``T2::net::server::start_listening``.
+- ⚠️ ``void T2::net::server::start_listening(std::vector<std::function<void(T2::net::client* const)>>, const bool catch_listener)``: Launches a ``T2::net::server::listen_loop`` on a separate thread. An exception will be thrown if the server is already listening.
 - ⚡️ ``void T2::net::server::listen_loop(std::vector<std::function<void(T2::net::client* const)>>)``: A private function that operates as the listener for the server. This function is currently launched as a separate thread, it takes a list (``std::vector``) of the anonymous functions that should be called when a new connection is established.
 - ⚠️ ``void T2::net::server::stop_listening(bool)``: Cleanly stops the ``T2::net::server::listen_loop`` thread by setting a flag. This function throws an exception if the server isn't already listening.
 

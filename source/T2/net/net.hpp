@@ -110,16 +110,19 @@ namespace T2 {
         private:
             bool cleaned_up = false; // Stores whether the server's listen_loop has returned.
             void listen_loop(
-                std::vector<std::function<void(T2::net::client* const)>> connection_handlers);
+                const std::vector<std::function<void(T2::net::client* const)>>& connection_handlers,
+                const bool catch_listeners);
             bool actively_listening = false;
-            uint16_t port;
+            const uint16_t port;
         public:
             server(const uint16_t port);
             ~server();
             void start_listening(
-                std::vector<std::function<void(T2::net::client* const)>> connection_handlers);
+                const std::vector<std::function<void(T2::net::client* const)>>& connection_handlers,
+                const bool catch_listeners = true);
             // Wrapper around the start_listening function that takes a vector for a parameter.
-            void start_listening(std::function<void(T2::net::client* const)> connection_handler);
+            void start_listening(const std::function<void(T2::net::client* const)>& connection_handler,
+                const bool catch_listeners = true);
             void stop_listening();
         };
     };
