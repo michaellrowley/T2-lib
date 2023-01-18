@@ -117,13 +117,20 @@ namespace T2 {
         public:
             server(const uint16_t port);
             ~server();
+            
             void start_listening(
                 const std::vector<std::function<void(T2::net::client* const)>>& connection_handlers,
                 const bool catch_listeners = true);
+            
             // Wrapper around the start_listening function that takes a vector for a parameter.
             void start_listening(const std::function<void(T2::net::client* const)>& connection_handler,
                 const bool catch_listeners = true);
             void stop_listening();
+
+            static void call_handlers(
+                const std::vector<std::function<void(T2::net::client* const)>>& handlers,
+                T2::net::client* const accepted_client
+            );
         };
     };
 };

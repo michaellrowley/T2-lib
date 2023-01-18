@@ -9,6 +9,29 @@
 
 T2::net::server::server(const uint16_t port) : port(port) { }
 
+void T2::net::server::call_handlers(const std::vector<std::function<void(T2::net::client* const)>>& handlers,
+    T2::net::client* const accepted_client) {
+
+    for (const std::function<void(T2::net::client* const)>& iterative_handler : connection_handlers) {
+        try {
+            iterative_handler(accepted_client);
+        } catch (std::runtime_error& exception_object) {
+#if defined(_DEBUG)
+        std::clog << "T2::net::server::listen_loop() @ " + std::to_string(__LINE__) + ": "
+            "Iterative handler threw an exception when processing connection - " +
+            std::string(exception_object.what()) + ".\r\n";
+#endif
+            if (!catch_listeners) {
+                delete accepted_client; // Disconnects and frees resources.
+                std::__throw_runtime_error("Server listener threw an exception.");
+            }
+        }
+    }
+    // In this capacity, delete will call the destructor for T2::net::client which will,
+    // if appropriate, disconnect safely and then free resources.
+    delete accepted_client;
+}
+
 void T2::net::server::listen_loop(
         const std::vector<std::function<void(T2::net::client* const)>>& connection_handlers,
         const bool catch_listeners) {
@@ -36,27 +59,10 @@ void T2::net::server::listen_loop(
             "' from '" + boost::lexical_cast<std::string>(active_socket.remote_endpoint()) + "'.\r\n";
 #endif
 
+        // T2::net::server::call_handlers will delete the T2::net::client object when finished.
         T2::net::client* const accepted_client = new T2::net::client(active_socket);
-
-        for (const std::function<void(T2::net::client* const)>&
-                iterative_handler : connection_handlers) {
-
-            try {
-                iterative_handler(accepted_client);
-            } catch (std::runtime_error& exception_object) {
-#if defined(_DEBUG)
-            std::clog << "T2::net::server::listen_loop() @ " + std::to_string(__LINE__) + ": "
-                "Iterative handler threw an exception when processing connection - " +
-                std::string(exception_object.what()) + ".\r\n";
-#endif
-                if (!catch_listeners) {
-                    std::__throw_runtime_error("Server listener threw an exception.");
-                }
-            }
-        }
-        // In this capacity, delete will call the destructor for T2::net::client which will,
-        // if appropriate, disconnect safely and then free resources.
-        delete accepted_client;
+        // TODO: Bind the call_handlers function to connection_handlers at the start.
+        std::async(std::launch::async, T2::net::server::call_handlers, connection_handlers, accepted_client);
     }
     this->cleaned_up = true;
 }
